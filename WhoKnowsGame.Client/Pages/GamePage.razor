@@ -1,0 +1,32 @@
+﻿@page "/gamePage/{gameId:int}"
+@using WhoKnowsGame.Shared.Interfaces
+@using WhoKnowsGame.Shared.Models
+@rendermode @(new InteractiveAutoRenderMode(true))
+
+<PageTitle>Counter</PageTitle>
+
+<h1>@CurrentGame?.Name</h1>
+
+@if (CurrentGame != null)
+{
+    @foreach (var riddle in CurrentGame?.Riddles)
+    {
+        <div>@riddle.Question</div>
+        @foreach (var answer in riddle.Answers)
+        {
+            <div>@answer.Text</div>
+        }
+    }
+}
+<button @onclick="() => CurrentGame = null">Clear game</button>
+
+@code {
+    [Inject] IGameService GameService { get; set; }
+    [Parameter] public int gameId { get; set; }
+    private Game CurrentGame { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentGame = await GameService.GetGame(gameId);
+    }
+}

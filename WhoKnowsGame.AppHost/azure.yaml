@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: who-knows-game
+services:  
+  app:
+    language: dotnet
+    project: ./WhoKnowsGame.AppHost.csproj
+    host: containerapp
