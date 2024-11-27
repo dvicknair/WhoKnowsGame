@@ -87,7 +87,7 @@ else
     {
         IBrowserFile imgFile = e.File;
         var buffers = new byte[imgFile.Size];
-        await imgFile.OpenReadStream().ReadAsync(buffers);
+        await imgFile.OpenReadStream(maxAllowedSize: 51200000).ReadAsync(buffers);
         //EnterGameDto.Image = $"data:{imgFile.ContentType};base64,{Convert.ToBase64String(buffers)}";
         EnterGameDto.Image = buffers;
     }

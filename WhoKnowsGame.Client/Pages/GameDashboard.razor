@@ -1,0 +1,47 @@
+﻿@page "/dashboard/{gameId:int}"
+@using Microsoft.AspNetCore.SignalR.Client
+@using WhoKnowsGame.Shared.Interfaces
+@using WhoKnowsGame.Shared.Models
+
+<h1>Players</h1>
+@foreach (var player in Players)
+{
+    <div @key="player.Id"><img src="data:image;base64, @System.Convert.ToBase64String(player.Image.Image)" height="200" width="200"> @player.FullName</div>
+}
+
+@code {
+
+    [Parameter] public int gameId { get; set; }
+
+    [Inject] IGameService GameService { get; set; }
+    [Inject] NavigationManager Navigation { get; set; }
+    private Game CurrentGame { get; set; }
+
+    private HubConnection? hubConnection;
+    private List<Player> Players = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentGame = await GameService.GetGame(gameId);
+        Players = await GameService.GetPlayers(gameId);
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
+            .Build();
+
+        hubConnection.On<Player>("ReceiveNewPlayer", (player) =>
+        {
+            Players.Add(player);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null) await hubConnection.DisposeAsync();
+    }
+}
