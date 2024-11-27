@@ -1,32 +1,116 @@
-﻿@page "/gamePage/{gameId:int}"
+﻿@page "/{gameId:int}"
+@using Microsoft.AspNetCore.SignalR.Client
+@using WhoKnowsGame.Shared.Dtos
 @using WhoKnowsGame.Shared.Interfaces
 @using WhoKnowsGame.Shared.Models
 @rendermode @(new InteractiveAutoRenderMode(true))
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>@CurrentGame?.Name</PageTitle>
 
 <h1>@CurrentGame?.Name</h1>
 
-@if (CurrentGame != null)
+@if(Player is null)
 {
-    @foreach (var riddle in CurrentGame?.Riddles)
+    <EditForm Model="@EnterGameDto" OnValidSubmit="@HandleEnterGameRequest" FormName="Handle_Enter_Game_Request" novalidate>
+        <DataAnnotationsValidator />
+
+        <FluentStack Orientation="Orientation.Vertical">
+            <div>
+                <FluentTextField Name="FirstName" @bind-Value="EnterGameDto.FirstName" Label="FirstName" Required />
+                <FluentValidationMessage For="@(() => EnterGameDto.FirstName)" />
+            </div>
+            <div>
+                <FluentTextField Name="LastName" @bind-Value="EnterGameDto.LastName" Label="LastName" Required />
+                <FluentValidationMessage For="@(() => EnterGameDto.LastName)" />
+            </div>
+            <div>
+                <InputFile class="form-control" OnChange="@OnInputFileChange" />
+            </div>
+            <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Start</FluentButton>
+        </FluentStack>
+    </EditForm>
+}
+else
+{
+    <div>Welcome @Player.FirstName</div>
+
+    @if (CurrentGame != null)
     {
-        <div>@riddle.Question</div>
-        @foreach (var answer in riddle.Answers)
+        @foreach (var riddle in CurrentGame?.Riddles)
         {
-            <div>@answer.Text</div>
+            <div>@riddle.Question</div>
+            @foreach (var answer in riddle.Answers)
+            {
+                <div>@answer.Text</div>
+            }
         }
     }
+    <button @onclick="() => CurrentGame = null">Clear game</button>
 }
-<button @onclick="() => CurrentGame = null">Clear game</button>
 
+@foreach (var player in Players)
+{
+    <div><img src="@player.Image" height="200" width="200"> @player.FullName</div>
+}
+
+@implements IAsyncDisposable
 @code {
-    [Inject] IGameService GameService { get; set; }
     [Parameter] public int gameId { get; set; }
+    [Inject] IGameService GameService { get; set; }
+    [Inject] NavigationManager Navigation { get; set; }
+    private EnterGameDto EnterGameDto { get; set; } = new();
     private Game CurrentGame { get; set; }
+    private Player Player { get; set; }
+
+    private HubConnection? hubConnection;
+    private List<Player> Players = [];
 
     protected override async Task OnInitializedAsync()
     {
+        EnterGameDto.GameId = gameId;
         CurrentGame = await GameService.GetGame(gameId);
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
+            .Build();
+
+        hubConnection.On<Player>("ReceiveNewPlayer", (player) =>
+        {
+            Players.Add(player);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        IBrowserFile imgFile = e.File;
+        var buffers = new byte[imgFile.Size];
+        await imgFile.OpenReadStream().ReadAsync(buffers);
+        //EnterGameDto.Image = $"data:{imgFile.ContentType};base64,{Convert.ToBase64String(buffers)}";
+        EnterGameDto.Image = buffers;
+    }
+
+    void OnCompleted(IEnumerable<FluentInputFileEventArgs> files)
+    {
+    }
+
+    private async Task HandleEnterGameRequest()
+    {
+        Player = await GameService.EnterGame(EnterGameDto);
+        Send(Player);
+    }
+
+    private async Task Send(Player player)
+    {
+        if (hubConnection is not null) await hubConnection.SendAsync("ReportNewPlayer", player);
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null) await hubConnection.DisposeAsync();
     }
 }

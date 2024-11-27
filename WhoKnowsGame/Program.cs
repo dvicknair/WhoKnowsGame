@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.FluentUI.AspNetCore.Components;
 using System.Text.Json.Serialization;
 using WhoKnowsGame.Components;
 using WhoKnowsGame.Data;
 using WhoKnowsGame.Services;
+using WhoKnowsGame.Shared.Dtos;
 using WhoKnowsGame.Shared.Interfaces;
 using WhoKnowsGame.Shared.Models;
+using WhoKnowsGame.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +27,19 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
+builder.Services.AddFluentUIComponents();
+
+builder.Services.AddSignalR();
+
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        ["application/octet-stream"]);
+});
+
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 app.MapDefaultEndpoints();
 
@@ -79,12 +95,16 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.MapGet("/game/{gameId}", ([FromServices] IGameService gameService, int gameId) => gameService.GetGame(gameId));
+app.MapGet("/game/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.GetGame(gameId));
+app.MapGet("/players/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.GetPlayers(gameId));
+app.MapPost("/EnterGame", async ([FromServices] IGameService gameService, EnterGameDto enterGameDto) => await gameService.EnterGame(enterGameDto));
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(WhoKnowsGame.Client._Imports).Assembly);
+
+app.MapHub<GameHub>("/gamehub");
 
 app.Run();
