@@ -3,7 +3,7 @@
 @using WhoKnowsGame.Shared.Dtos
 @using WhoKnowsGame.Shared.Interfaces
 @using WhoKnowsGame.Shared.Models
-@rendermode @(new InteractiveAutoRenderMode(true))
+@rendermode @(new InteractiveAutoRenderMode(false))
 
 <PageTitle>@CurrentGame?.Name</PageTitle>
 
@@ -37,16 +37,19 @@ else
 
     @if (CurrentGame != null)
     {
-        @foreach (var riddle in CurrentGame?.Riddles)
+        if (CurrentGame.Status == 0)
         {
-            <div>@riddle.Question</div>
-            @foreach (var answer in riddle.Answers)
+            <div>Waiting for game to begin</div>
+        }
+        else
+        {
+            <div>@CurrentGame.Riddles.ElementAt(CurrentRiddle).Question</div>
+            @foreach (var answer in @CurrentGame.Riddles.ElementAt(CurrentRiddle).Answers)
             {
                 <div>@answer.Text</div>
             }
         }
     }
-    <button @onclick="() => CurrentGame = null">Clear game</button>
 }
 
 @foreach (var player in Players)
@@ -63,6 +66,7 @@ else
     [Inject] NavigationManager Navigation { get; set; }
     private EnterGameDto EnterGameDto { get; set; } = new();
     private Game CurrentGame { get; set; }
+    private int CurrentRiddle { get; set; }
     private Player Player { get; set; }
 
     private HubConnection? hubConnection;
@@ -81,6 +85,18 @@ else
         {
             Players.Add(player);
             InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On<int>("ReceiveGameStarted", async (gameId) =>
+        {
+            CurrentGame = await GameService.GetGame(gameId);
+            await InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On<int>("ReceiveNextRiddle", async (riddleIndex) =>
+        {
+            CurrentRiddle = riddleIndex;
+            await InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();

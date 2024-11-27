@@ -2,10 +2,20 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using WhoKnowsGame.Shared.Interfaces
 @using WhoKnowsGame.Shared.Models
-@rendermode InteractiveAuto
+@rendermode @(new InteractiveAutoRenderMode(false))
 
 @if(Game?.Status == 0){
     <FluentButton OnClick="StartGame">Start Game</FluentButton>
+}else{
+    @if (Game != null)
+    {
+        <div>@Game.Riddles.ElementAt(CurrentRiddle).Question</div>
+        @foreach (var answer in @Game.Riddles.ElementAt(CurrentRiddle).Answers)
+        {
+            <div>@answer.Text</div>
+        }
+    }
+    <FluentButton OnClick="NextRiddle">Next Riddle</FluentButton>
 }
 
 <h1>Players</h1>
@@ -23,6 +33,7 @@
     [Inject] IGameService GameService { get; set; }
     [Inject] NavigationManager Navigation { get; set; }
     private Game Game { get; set; }
+    private int CurrentRiddle { get; set; }
 
     private HubConnection? hubConnection;
     private List<Player> Players = [];
@@ -43,10 +54,16 @@
                 Players.Add(player);
                 InvokeAsync(StateHasChanged);
             });
-            hubConnection.On<Game>("ReceiveGameStarted", (game) =>
+            hubConnection.On<int>("ReceiveGameStarted", async (gameId) =>
             {
-                Game = game;
-                InvokeAsync(StateHasChanged);
+                Game = await GameService.GetGame(gameId);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            hubConnection.On<int>("ReceiveNextRiddle", async (riddleIndex) =>
+            {
+                CurrentRiddle = riddleIndex;
+                await InvokeAsync(StateHasChanged);
             });
 
             await hubConnection.StartAsync();
@@ -57,6 +74,11 @@
     {
         await GameService.StartGame(gameId);
         if (hubConnection is not null) await hubConnection.SendAsync("ReportGameStarted", gameId);
+    }
+
+    private async Task NextRiddle()
+    {
+        if (hubConnection is not null) await hubConnection.SendAsync("ReportNextRiddle", gameId);
     }
 
     public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
