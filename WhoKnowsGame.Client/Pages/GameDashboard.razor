@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using WhoKnowsGame.Shared.Interfaces
 @using WhoKnowsGame.Shared.Models
+@rendermode InteractiveAuto
 
 @if(Game?.Status == 0){
     <FluentButton OnClick="StartGame">Start Game</FluentButton>
@@ -31,22 +32,25 @@
         Game = await GameService.GetGame(gameId);
         Players = await GameService.GetPlayers(gameId);
 
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
-            .Build();
-
-        hubConnection.On<Player>("ReceiveNewPlayer", (player) =>
+        if (!IsConnected)
         {
-            Players.Add(player);
-            InvokeAsync(StateHasChanged);
-        });
-        hubConnection.On<Game>("ReceiveGameStarted", (game) =>
-        {
-            Game = game;
-            InvokeAsync(StateHasChanged);
-        });
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
+                .Build();
 
-        await hubConnection.StartAsync();
+            hubConnection.On<Player>("ReceiveNewPlayer", (player) =>
+            {
+                Players.Add(player);
+                InvokeAsync(StateHasChanged);
+            });
+            hubConnection.On<Game>("ReceiveGameStarted", (game) =>
+            {
+                Game = game;
+                InvokeAsync(StateHasChanged);
+            });
+
+            await hubConnection.StartAsync();
+        }
     }
 
     private async Task StartGame()

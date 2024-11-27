@@ -13,6 +13,7 @@
 {
     <EditForm Model="@EnterGameDto" OnValidSubmit="@HandleEnterGameRequest" FormName="Handle_Enter_Game_Request" novalidate>
         <DataAnnotationsValidator />
+        <FluentValidationSummary />
 
         <FluentStack Orientation="Orientation.Vertical">
             <div>

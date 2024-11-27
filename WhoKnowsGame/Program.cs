@@ -97,6 +97,7 @@ app.UseAntiforgery();
 
 app.MapGet("/game/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.GetGame(gameId));
 app.MapGet("/players/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.GetPlayers(gameId));
+app.MapGet("/StartGame/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.StartGame(gameId));
 app.MapPost("/EnterGame", async ([FromServices] IGameService gameService, EnterGameDto enterGameDto) => await gameService.EnterGame(enterGameDto));
 
 app.MapStaticAssets();
