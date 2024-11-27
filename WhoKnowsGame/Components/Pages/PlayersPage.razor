@@ -6,7 +6,10 @@
 <h3>Players</h3>
 @foreach (var player in Players)
 {
-    <div><img src="data:image;base64, @System.Convert.ToBase64String(player.Image.Image)" height="200" width="200"> @player.FullName</div>
+    <div>
+        @* <img src="data:image;base64, @System.Convert.ToBase64String(player.Image.Image)" height="200" width="200"> *@
+        @player.FullName
+    </div>
 }
 
 

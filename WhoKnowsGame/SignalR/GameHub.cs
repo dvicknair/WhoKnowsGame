@@ -9,5 +9,9 @@ namespace WhoKnowsGame.SignalR
         {
             await Clients.All.SendAsync("ReceiveNewPlayer", player);
         }
+        public async Task ReportGameStarted(Game game)
+        {
+            await Clients.All.SendAsync("ReceiveGameStarted", game);
+        }
     }
 }

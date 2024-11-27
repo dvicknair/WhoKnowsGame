@@ -19,5 +19,7 @@ namespace WhoKnowsGame.Client.Services
 
         public async Task<Game> GetGame(int gameId) => await httpClient.GetFromJsonAsync<Game>($"game/{gameId}");
         public async Task<List<Player>> GetPlayers(int gameId) => await httpClient.GetFromJsonAsync<List<Player>>($"players/{gameId}");
+
+        public async Task<Game> StartGame(int gameId) => await httpClient.GetFromJsonAsync<Game>($"StartGame/{gameId}");
     }
 }

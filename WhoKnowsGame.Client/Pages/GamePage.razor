@@ -50,7 +50,9 @@ else
 
 @foreach (var player in Players)
 {
-    <div><img src="@player.Image" height="200" width="200"> @player.FullName</div>
+    <div>
+        @* <img src="@player.Image" height="200" width="200"> *@
+        @player.FullName</div>
 }
 
 @implements IAsyncDisposable

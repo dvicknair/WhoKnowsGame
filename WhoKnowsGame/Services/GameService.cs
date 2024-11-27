@@ -17,19 +17,28 @@ namespace WhoKnowsGame.Services
             var newPlayer = new Player
             {
                 FirstName = enterGameDto.FirstName,
-                LastName = enterGameDto.LastName,
-                Image = new PlayerImage { Image = enterGameDto.Image }
+                LastName = enterGameDto.LastName
             };
             newPlayer.Games = new List<Game> { db.Games.FirstOrDefault(x => x.Id == enterGameDto.GameId) };
             db.Players.Add(newPlayer);
             await db.SaveChangesAsync();
 
-            newPlayer.Image = null;
+            //newPlayer.Image = null;
             return newPlayer;
+        }
+
+        public async Task<Game> StartGame(int gameId)
+        {
+            var game = db.Games.Find(gameId);
+            game.Status = 1;
+            await db.SaveChangesAsync();
+            return game;
         }
 
         public async Task<Game> GetGame(int gameId) => await db.Games.Include(x => x.Riddles).ThenInclude(x => x.Answers).FirstOrDefaultAsync(x => x.Id == gameId);
 
-        public async Task<List<Player>> GetPlayers(int gameId) => await db.Players.Include(x => x.Image).Where(x => x.Games.Any(g => g.Id == gameId)).ToListAsync();
+        public async Task<List<Player>> GetPlayers(int gameId) => await db.Players
+            //.Include(x => x.Image)
+            .Where(x => x.Games.Any(g => g.Id == gameId)).ToListAsync();
     }
 }
