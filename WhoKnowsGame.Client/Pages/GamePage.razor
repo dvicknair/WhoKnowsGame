@@ -89,7 +89,7 @@ else
 
         hubConnection.On<int>("ReceiveGameStarted", async (gameId) =>
         {
-            CurrentGame = await GameService.GetGame(gameId);
+            CurrentGame.Status = 1;
             await InvokeAsync(StateHasChanged);
         });
 

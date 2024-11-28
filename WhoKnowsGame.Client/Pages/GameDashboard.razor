@@ -56,7 +56,7 @@
             });
             hubConnection.On<int>("ReceiveGameStarted", async (gameId) =>
             {
-                Game = await GameService.GetGame(gameId);
+                Game.Status = 1;
                 await InvokeAsync(StateHasChanged);
             });
 
