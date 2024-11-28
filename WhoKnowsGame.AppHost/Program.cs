@@ -1,6 +1,8 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var sqlServer = builder.AddSqlServer("whoknowssql")
+var password = builder.AddParameter("password", secret: true);
+
+var sqlServer = builder.AddSqlServer("whoknowssql", password)
     .WithDataVolume()
     .AddDatabase("whoknowsdatabase");
 
