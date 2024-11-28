@@ -10,5 +10,6 @@ namespace WhoKnowsGame.Shared.Interfaces
         Task<List<Player>> GetPlayers(int gameId);
         Task<Game> StartGame(int gameId);
         Task AnswerRiddle(AnswerRiddleDto answerRiddleDto);
+        Task<List<Player>> GetGameResults(int gameId);
     }
 }

@@ -41,6 +41,19 @@ namespace WhoKnowsGame.Services
             //.Include(x => x.Image)
             .Where(x => x.Games.Any(g => g.Id == gameId)).ToListAsync();
 
+        public async Task<List<Player>> GetGameResults(int gameId)
+        {
+            var results = await db.Players
+                .Include(x => x.PlayerRiddleAnswers.Where(r => r.Riddle.GameId == gameId))
+                .ThenInclude(PlayerRiddleAnswer => PlayerRiddleAnswer.Riddle)
+                .Where(x => x.Games.Any(g => g.Id == gameId)).ToListAsync();
+            foreach (var result in results)
+            {
+                result.NumberOfCorrectAnswers = result.PlayerRiddleAnswers.Count(x => x.Riddle.AnswerId == x.AnswerId);
+            }
+            return results;
+        }
+
         public async Task AnswerRiddle(AnswerRiddleDto answerRiddleDto)
         {
             var playerRiddleAnswer = new PlayerRiddleAnswer

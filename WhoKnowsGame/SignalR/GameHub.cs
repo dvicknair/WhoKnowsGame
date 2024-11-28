@@ -17,5 +17,9 @@ namespace WhoKnowsGame.SignalR
         {
             await Clients.All.SendAsync("ReceiveNextRiddle", riddleIndex);
         }
+        public async Task ReportFinishGame()
+        {
+            await Clients.All.SendAsync("ReceiveFinishGame");
+        }
     }
 }

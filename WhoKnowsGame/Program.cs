@@ -73,7 +73,8 @@ using (var scope = app.Services.CreateScope())
                             new() { Text = "Blue" },
                             new() { Text = "Green" },
                             new() { Text = "Purple" },
-                        ]
+                        ],
+                        AnswerId = 2
                     },
                     new() {
                         Question = "What is Bob's favorite food?",
@@ -82,7 +83,8 @@ using (var scope = app.Services.CreateScope())
                             new() { Text = "Tacos" },
                             new() { Text = "Ice Cream" },
                             new() { Text = "Hot Dogs" },
-                        ]
+                        ],
+                        AnswerId = 6
                     }
             ]
         });
@@ -100,6 +102,7 @@ app.MapGet("/playersss/{gameId}", async ([FromServices] IGameService gameService
 app.MapGet("/StartGame/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.StartGame(gameId));
 app.MapPost("/EnterGame", async ([FromServices] IGameService gameService, EnterGameDto enterGameDto) => await gameService.EnterGame(enterGameDto));
 app.MapPost("/AnswerRiddle", async ([FromServices] IGameService gameService, AnswerRiddleDto answerRiddleDto) => await gameService.AnswerRiddle(answerRiddleDto));
+app.MapGet("/GetGameResults/{gameId}", async ([FromServices] IGameService gameService, int gameId) => await gameService.GetGameResults(gameId));
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

@@ -41,7 +41,7 @@ else
         {
             <div>Waiting for game to begin</div>
         }
-        else
+        else if(CurrentGame.Status == 1)
         {
             <div>@CurrentGame.Riddles.ElementAt(CurrentRiddle).Question</div>
             <FluentRadioGroup Name="strings" @bind-Value=SelectedAnswerId Label="@CurrentGame.Riddles.ElementAt(CurrentRiddle).Question">
@@ -51,14 +51,11 @@ else
                 }
             </FluentRadioGroup>
         }
+        else if(CurrentGame.Status == 2)
+        {
+            <h1>Thanks for playing!</h1>
+        }
     }
-}
-
-@foreach (var player in Players)
-{
-    <div>
-        @* <img src="@player.Image" height="200" width="200"> *@
-        @player.FullName</div>
 }
 
 @implements IAsyncDisposable
@@ -84,12 +81,6 @@ else
             .WithUrl(Navigation.ToAbsoluteUri("/gamehub"))
             .Build();
 
-        hubConnection.On<Player>("ReceiveNewPlayer", (player) =>
-        {
-            Players.Add(player);
-            InvokeAsync(StateHasChanged);
-        });
-
         hubConnection.On<int>("ReceiveGameStarted", async (gameId) =>
         {
             CurrentGame.Status = 1;
@@ -101,6 +92,13 @@ else
             await GameService.AnswerRiddle(new AnswerRiddleDto { PlayerId = Player.Id, RiddleId = CurrentGame.Riddles.ElementAt(CurrentRiddle).Id, AnswerId = SelectedAnswerId });
             SelectedAnswerId = default;
             CurrentRiddle = riddleIndex;
+            await InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On("ReceiveFinishGame", async () =>
+        {
+            await GameService.AnswerRiddle(new AnswerRiddleDto { PlayerId = Player.Id, RiddleId = CurrentGame.Riddles.ElementAt(CurrentRiddle).Id, AnswerId = SelectedAnswerId });
+            CurrentGame.Status = 2;
             await InvokeAsync(StateHasChanged);
         });
 
@@ -123,7 +121,7 @@ else
     private async Task HandleEnterGameRequest()
     {
         Player = await GameService.EnterGame(EnterGameDto);
-        Send(Player);
+        await Send(Player);
     }
 
     private async Task Send(Player player)

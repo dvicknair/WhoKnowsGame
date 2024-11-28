@@ -7,7 +7,7 @@
 @if(Game?.Status == 0){
     <FluentButton OnClick="StartGame">Start Game</FluentButton>
 }else{
-    @if (Game != null)
+    @if (!GameFinished && Game != null)
     {
         <div>@Game.Riddles.ElementAt(CurrentRiddle).Question</div>
         @foreach (var answer in @Game.Riddles.ElementAt(CurrentRiddle).Answers)
@@ -20,17 +20,21 @@
         }
         else
         {
-            <FluentButton OnClick="NextRiddle">See Results</FluentButton>
+            <FluentButton OnClick="FinishGame">See Results</FluentButton>
         }
     }
-}
+    @if (GameFinished)
+    {
+        <h1>Results</h1>
+        @foreach (var player in Players.OrderByDescending(x => x.NumberOfCorrectAnswers))
+        {
+            <div @key="player.Id">
+                @* <img src="data:image;base64, @System.Convert.ToBase64String(player.Image.Image)" height="200" width="200"> *@
+                @player.NumberOfCorrectAnswers - @player.FullName
+            </div>
+        }
+    }
 
-<h1>Players</h1>
-@foreach (var player in Players)
-{
-    <div @key="player.Id">
-        @* <img src="data:image;base64, @System.Convert.ToBase64String(player.Image.Image)" height="200" width="200"> *@
-        @player.FullName</div>
 }
 
 @code {
@@ -41,6 +45,7 @@
     [Inject] NavigationManager Navigation { get; set; }
     private Game Game { get; set; }
     private int CurrentRiddle { get; set; }
+    private bool GameFinished{ get; set; }
 
     private HubConnection? hubConnection;
     private List<Player> Players = [];
@@ -86,6 +91,13 @@
     private async Task NextRiddle()
     {
         if (hubConnection is not null) await hubConnection.SendAsync("ReportNextRiddle", CurrentRiddle + 1);
+    }
+
+    private async Task FinishGame()
+    {
+        if (hubConnection is not null) await hubConnection.SendAsync("ReportFinishGame");
+        Players = await GameService.GetGameResults(gameId);
+        GameFinished = true;
     }
 
     public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;

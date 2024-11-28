@@ -1,4 +1,6 @@
-﻿namespace WhoKnowsGame.Shared.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace WhoKnowsGame.Shared.Models
 {
     public class Player
     {
@@ -9,5 +11,8 @@
         //public int PlayerImageId { get; set; }
         //public PlayerImage Image { get; set; }
         public List<Game> Games { get; set; }
+        public List<PlayerRiddleAnswer> PlayerRiddleAnswers { get; set; }
+        [NotMapped]
+        public int NumberOfCorrectAnswers { get; set; }
     }
 }
