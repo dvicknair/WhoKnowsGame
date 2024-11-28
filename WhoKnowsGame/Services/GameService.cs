@@ -23,6 +23,7 @@ namespace WhoKnowsGame.Services
             db.Players.Add(newPlayer);
             await db.SaveChangesAsync();
 
+            newPlayer.Games = null;
             //newPlayer.Image = null;
             return newPlayer;
         }
