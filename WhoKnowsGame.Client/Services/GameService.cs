@@ -11,6 +11,11 @@ namespace WhoKnowsGame.Client.Services
 
         public GameService(HttpClient httpClient) => this.httpClient = httpClient;
 
+        public async Task AnswerRiddle(AnswerRiddleDto answerRiddleDto)
+        {
+            await httpClient.PostAsJsonAsync("AnswerRiddle", answerRiddleDto);
+        }
+
         public async Task<Player> EnterGame(EnterGameDto enterGameDto)
         {
             var response = await httpClient.PostAsJsonAsync("EnterGame", enterGameDto);

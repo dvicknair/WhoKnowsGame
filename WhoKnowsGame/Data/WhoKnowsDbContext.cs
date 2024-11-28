@@ -8,6 +8,7 @@ public class WhoKnowsDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<Game> Games { get; set; }
     public DbSet<Riddle> Riddles { get; set; }
     public DbSet<Player> Players { get; set; }
+    public DbSet<PlayerRiddleAnswer> PlayerRiddleAnswers { get; set; }
 
     //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     //{

@@ -14,8 +14,15 @@
         {
             <div>@answer.Text</div>
         }
+        if (CurrentRiddle < Game.Riddles.Count - 1)
+        {
+            <FluentButton OnClick="NextRiddle">Next Riddle</FluentButton>
+        }
+        else
+        {
+            <FluentButton OnClick="NextRiddle">See Results</FluentButton>
+        }
     }
-    <FluentButton OnClick="NextRiddle">Next Riddle</FluentButton>
 }
 
 <h1>Players</h1>
@@ -78,7 +85,7 @@
 
     private async Task NextRiddle()
     {
-        if (hubConnection is not null) await hubConnection.SendAsync("ReportNextRiddle", gameId);
+        if (hubConnection is not null) await hubConnection.SendAsync("ReportNextRiddle", CurrentRiddle + 1);
     }
 
     public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;

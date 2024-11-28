@@ -44,10 +44,12 @@ else
         else
         {
             <div>@CurrentGame.Riddles.ElementAt(CurrentRiddle).Question</div>
-            @foreach (var answer in @CurrentGame.Riddles.ElementAt(CurrentRiddle).Answers)
-            {
-                <div>@answer.Text</div>
-            }
+            <FluentRadioGroup Name="strings" @bind-Value=SelectedAnswerId Label="@CurrentGame.Riddles.ElementAt(CurrentRiddle).Question">
+                @foreach (var answer in @CurrentGame.Riddles.ElementAt(CurrentRiddle).Answers)
+                {
+                    <FluentRadio Value="@answer.Id">@answer.Text</FluentRadio>
+                }
+            </FluentRadioGroup>
         }
     }
 }
@@ -67,6 +69,7 @@ else
     private EnterGameDto EnterGameDto { get; set; } = new();
     private Game CurrentGame { get; set; }
     private int CurrentRiddle { get; set; }
+    private int SelectedAnswerId { get; set; }
     private Player Player { get; set; }
 
     private HubConnection? hubConnection;
@@ -95,6 +98,8 @@ else
 
         hubConnection.On<int>("ReceiveNextRiddle", async (riddleIndex) =>
         {
+            await GameService.AnswerRiddle(new AnswerRiddleDto { PlayerId = Player.Id, RiddleId = CurrentGame.Riddles.ElementAt(CurrentRiddle).Id, AnswerId = SelectedAnswerId });
+            SelectedAnswerId = default;
             CurrentRiddle = riddleIndex;
             await InvokeAsync(StateHasChanged);
         });
